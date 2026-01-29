@@ -128,7 +128,7 @@ elif menu == "管理員後台":
 
         with tab4:    
             st.subheader("📢 現場點名 QR Code")
-            url = "你的雲端網址" # 部署完後產生的網址
+            url = "https://ha360-rollcall-axjxhju8fwzvno8ugrnzao.streamlit.app/" # 部署完後產生的網址
             qr_img = qrcode.make(url)
             buf = BytesIO()
             qr_img.save(buf)
