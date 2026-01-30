@@ -12,8 +12,8 @@ ADMIN_PASSWORD = "ha360admin"  # 你可以修改這個管理密碼
 
 if not os.path.exists(DB_FILE):
     df_init = pd.DataFrame([
-        {"姓名": "小明", "簽到時間": None, "簽退時間": None, "積分": 0},
-        {"姓名": "小華", "簽到時間": None, "簽退時間": None, "積分": 0}
+        {"姓名": "小明", "簽到日期": None, "簽到時間": None, "簽退時間": None, "積分": 0},
+        {"姓名": "小華", "簽到日期": None, "簽到時間": None, "簽退時間": None, "積分": 0}
     ])
     df_init.to_csv(DB_FILE, index=False)
 
@@ -34,13 +34,14 @@ if menu == "學員簽到頁":
     st.title("🎓 HA360 自主簽到")
     df = load_data()
     with st.form("checkin", clear_on_submit=True):
-        name = st.text_input("輸入您的姓名")
+        name = st.text_input("輸入您的eMail")
         btn = st.form_submit_button("送出")
         if btn:
             if name in df['姓名'].values:
                 idx = df[df['姓名'] == name].index[0]
                 now = datetime.now().strftime("%H:%M")
                 if pd.isna(df.at[idx, '簽到時間']):
+                    df.at[idx, '簽到日期'] = today
                     df.at[idx, '簽到時間'] = now
                     st.success(f"{name} 簽到成功！")
                 elif pd.isna(df.at[idx, '簽退時間']):
@@ -48,7 +49,7 @@ if menu == "學員簽到頁":
                     st.info(f"{name} 簽退成功！")
                 save_data(df)
             else:
-                st.error("名單中無此姓名")
+                st.error("名單中無此eMail")
 
 # --------------------------
 # 頁面 2：管理員後台
