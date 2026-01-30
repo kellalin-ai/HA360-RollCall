@@ -12,8 +12,8 @@ ADMIN_PASSWORD = "ha360admin"  # 你可以修改這個管理密碼
 
 if not os.path.exists(DB_FILE):
     df_init = pd.DataFrame([
-        {"姓名": "小明", "簽到時間": None, "簽退時間": None, "積分": 0},
-        {"姓名": "小華", "簽到時間": None, "簽退時間": None, "積分": 0}
+        {"eMail": "test1@example.com", "簽到日期": None, "簽到時間": None, "簽退時間": None, "積分": 0},
+        {"eMail": "test2@example.com", "簽到日期": None, "簽到時間": None, "簽退時間": None, "積分": 0}
     ])
     df_init.to_csv(DB_FILE, index=False)
 
@@ -25,7 +25,7 @@ def save_data(df):
 
 # --- 介面導航 ---
 st.set_page_config(page_title="HA360 點名管理系統", layout="wide")
-menu = st.sidebar.radio("功能選單", ["學員簽到頁", "管理員後台"])
+menu = st.sidebar.radio("功能選單", ["學員簽到頁", "積分查詢", "管理員後台"])
 
 # --------------------------
 # 頁面 1：學員簽到頁
@@ -34,19 +34,39 @@ if menu == "學員簽到頁":
     st.title("🎓 HA360 自主簽到")
     df = load_data()
     with st.form("checkin", clear_on_submit=True):
-        name = st.text_input("輸入您的姓名")
+# ---------------------------------------------        
+#        name = st.text_input("輸入您的姓名")
+# ---------------------------------------------   
+        email = st.text_input("輸入您的eMail")
         btn = st.form_submit_button("送出")
         if btn:
-            if name in df['姓名'].values:
-                idx = df[df['姓名'] == name].index[0]
-                now = datetime.now().strftime("%H:%M")
-                if pd.isna(df.at[idx, '簽到時間']):
-                    df.at[idx, '簽到時間'] = now
-                    st.success(f"{name} 簽到成功！")
-                elif pd.isna(df.at[idx, '簽退時間']):
-                    df.at[idx, '簽退時間'] = now
-                    st.info(f"{name} 簽退成功！")
+            if email in df['eMail'].values:
+                idx = df[df['eMail'] == email].index[0]
+                now_time = datetime.now().strftime("%H:%M")
+                today = datetime.now().strftime("%Y-%m-%d")
+                last_date = df.at[idx, '簽到日期']
+                # 新的一天 → 簽到
+                if pd.isna(last_date) or last_date != today:
+                    df.at[idx, '簽到日期'] = today
+                    df.at[idx, '簽到時間'] = now_time
+                    df.at[idx, '簽退時間'] = None
+                    st.success(f"{email} 今日簽到成功！")
+                else:
+                    # 同一天 → 簽退
+                    if pd.isna(df.at[idx, '簽退時間']):
+                        df.at[idx, '簽退時間'] = now_time
+                        df.at[idx, '積分'] += points
+                        st.info(f"{email} 今日簽退成功！🎉 已獲得積分")
+                    else:
+                        st.warning("⚠️ 今日已完成簽到與簽退，請勿重複操作")
+
                 save_data(df)
+# ---------------------------------------------                 
+#                elif pd.isna(df.at[idx, '簽退時間']):
+#                    df.at[idx, '簽退時間'] = now
+#                    st.info(f"{name} 簽退成功！")
+#                save_data(df)
+# --------------------------------------------- 
             else:
                 st.error("名單中無此姓名")
 
